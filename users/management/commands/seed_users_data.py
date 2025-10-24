@@ -1,6 +1,6 @@
 # apps/users/management/commands/seed_users_data.py
 from django.core.management.base import BaseCommand
-from apps.users.models import Role, Module, Permission, User, UserStatus
+from users.models import Role, Module, Permission, User, UserStatus
 
 class Command(BaseCommand):
     help = 'Seeder inicial: Roles, Modules, Permissions y Usuario Admin'

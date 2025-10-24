@@ -18,8 +18,6 @@ Sistema de Gestión Comercial para venta de electrodomésticos con IA predictiva
 - PostgreSQL
 - Swagger (drf_yasg)
 
-core es el archivo principal
-
 ## Instalación y Levantamiento del Backend
 
 1. Crear y activar el entorno virtual:
@@ -56,6 +54,9 @@ python manage.py runserver
 
 ## Swagger
 - La documentación de la API se encuentra en `/swagger/`.
+http://127.0.0.1:8000/api-docs/
+http://127.0.0.1:8000/swagger/
+
 - Usar Bearer token para rutas protegidas:
 Authorization: Bearer <TOKEN>
 - Permite probar endpoints directamente desde el navegador y ver respuestas JSON.
@@ -100,3 +101,4 @@ git push origin rama/nombre-descriptivo
 - Evitar subir datos sensibles.
 - Git status para ver que se está subiendo
 - Mantener consistencia con las convenciones de código del proyecto.
+

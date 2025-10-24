@@ -1,5 +1,5 @@
 """
-URL configuration for core project.
+URL configuration for smartsales project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -38,13 +38,13 @@ urlpatterns = [
 
     # API grouped
     path('api/', include([
-        path('users/', include('apps.users.urls')),
-        # path('products/', include('apps.products.urls')),
-        # path('sales/', include('apps.sales.urls')),
+        path('', include('users.urls')),
+        # path('products/', include('products.urls')),
+        # path('sales/', include('sales.urls')),
     ])),
 
     # swagger / redoc
-    path('swagger(<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path(r'swagger(<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api-docs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

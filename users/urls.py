@@ -10,5 +10,7 @@ router.register('modules', ModuleViewSet, basename='module')
 router.register('permissions', PermissionViewSet, basename='permission')
 
 urlpatterns = [
+    path('login/', UserViewSet.as_view({'post': 'login'}), name='login'),
+    path('logout/', UserViewSet.as_view({'post': 'logout'}), name='logout'),
     path('', include(router.urls)),
 ]

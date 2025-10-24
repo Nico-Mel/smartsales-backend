@@ -20,7 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [ModulePermission()]
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny],url_path='login', url_name='login')
     def login(self, request):
         from django.contrib.auth import authenticate
         email = request.data.get('email')
@@ -35,7 +35,7 @@ class UserViewSet(viewsets.ModelViewSet):
             })
         return Response({'detail': 'Credenciales inválidas'}, status=401)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'],url_path='logout', url_name='logout')
     def logout(self, request):
         return Response({'detail': 'Sesión cerrada'})
     
