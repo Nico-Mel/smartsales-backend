@@ -1,7 +1,8 @@
+# users/views.py
 from django.shortcuts import render
 
 # Create your views here.
-# apps/users/views.py
+# users/views.py
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
