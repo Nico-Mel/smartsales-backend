@@ -1,3 +1,4 @@
+# users/auth_views.py
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
