@@ -1,3 +1,4 @@
+# users/models.py
 from django.db import models
 
 # Create your models here.
@@ -21,13 +22,13 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class RoleChoices(models.TextChoices):
-    ADMIN = 'ADMIN', 'Administrador'
-    SALES_AGENT = 'SALES_AGENT', 'Agente de ventas'
-    CUSTOMER = 'CUSTOMER', 'Cliente'
+# class RoleChoices(models.TextChoices):
+#     ADMIN = 'ADMIN', 'Administrador'
+#     SALES_AGENT = 'SALES_AGENT', 'Agente de ventas'
+#     CUSTOMER = 'CUSTOMER', 'Cliente'
 
 class Role(models.Model):
-    name = models.CharField(max_length=20, choices=RoleChoices.choices, unique=True)
+    name = models.CharField(max_length=20, unique=True)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -35,10 +36,11 @@ class Role(models.Model):
 
     @property
     def display_name(self):
-        return self.get_name_display()
+        return self.name.capitalize()
 
     def __str__(self):
         return self.name
+
 
 class Module(models.Model):
     name = models.CharField(max_length=100, unique=True)
