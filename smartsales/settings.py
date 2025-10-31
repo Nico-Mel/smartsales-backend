@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "sucursales",
     #'customers',
     "products",
+    "ventas",
     #'sales',
     #'reports',
     #'ai',
