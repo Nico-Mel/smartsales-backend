@@ -1,7 +1,6 @@
-# sucursales/apps.py
 from django.apps import AppConfig
 
 
-class SucursalesConfig(AppConfig):
+class CartConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'sucursales'
+    name = 'cart'

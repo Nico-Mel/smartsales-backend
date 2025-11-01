@@ -10,11 +10,6 @@ router.register('roles', RoleViewSet, basename='role')
 router.register('modules', ModuleViewSet, basename='module')
 router.register('permissions', PermissionViewSet, basename='permission')
 
-# urlpatterns = [
-#     path('login/', UserViewSet.as_view({'post': 'login'}), name='login'),
-#     path('logout/', UserViewSet.as_view({'post': 'logout'}), name='logout'),
-#     path('', include(router.urls)),
-# ]
 urlpatterns = [
     # Bloque de autenticación JWT (puede ser usado tanto por web como por móvil)
     path('auth/login/', LoginView.as_view(), name='jwt_login'),

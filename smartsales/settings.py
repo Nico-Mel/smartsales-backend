@@ -20,8 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
-
+# ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', '192.168.0.10']
 # Apps
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     "sucursales",
     #'customers',
     "products",
+    "ventas",
+    "shipping",
+    "cart",
+    "notifications",
     #'sales',
     #'reports',
     #'ai',
