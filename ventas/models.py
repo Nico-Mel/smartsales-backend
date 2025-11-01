@@ -6,7 +6,7 @@ class Metodo_pago(models.Model):
     proveedor = models.TextField(blank=True, null = True)# stripe, qr, paypal
 
     class Meta:
-        db_name ='metodo_pago'
+        db_table ='metodo_pago'
     def __str__(self):
         return self.nombre
     
@@ -21,7 +21,7 @@ class Pago(models.Model):
     fecha = models.DateTimeField(auto_now=True)
     referencia = models.CharField(max_length=250, blank=True, null = True)
     class Meta: 
-        db_name = 'pago'
+        db_table = 'pago'
     def __str__(self):
         return f"{self.metodo.nombre} - {self.monto} - {self.estado}"
 

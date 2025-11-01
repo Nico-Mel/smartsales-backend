@@ -32,3 +32,16 @@ class Sucursal(models.Model):
 
     def __str__(self):
         return self.nombre
+class StockSucursal(models.Model):
+    stock = models.PositiveBigIntegerField(default=0)
+    producto = models.ForeignKey('products.Producto', on_delete=models.CASCADE)
+    sucursal = models.ForeignKey(Sucursal, on_delete=models.CASCADE)
+
+    class Meta: 
+        unique_together = ('producto', 'sucursal')
+        verbose_name = 'Stock en Sucursal'
+        verbose_name_plural = 'Stock en Sucursales'
+    
+    def __str__(self):
+        return f"{self.producto.nombre} - {self.sucursal.nombre} - {self.stock}"
+    
