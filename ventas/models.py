@@ -1,9 +1,10 @@
+# ventas/models.py
 from django.db import models
 
 class Metodo_pago(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    proveedor = models.TextField(blank=True, null = True)# stripe, qr, paypal
+    proveedor = models.CharField(blank=True, null = True)# stripe, qr, paypal
 
     class Meta:
         db_table ='metodo_pago'
@@ -18,17 +19,19 @@ class Pago(models.Model):
         ('completado','Completado'),
         ('fallido','Fallido'),
     ])
-    fecha = models.DateTimeField(auto_now=True)
+    fecha = models.DateTimeField(auto_now_add=True)
     referencia = models.CharField(max_length=250, blank=True, null = True)
     class Meta: 
         db_table = 'pago'
     def __str__(self):
-        return f"{self.metodo.nombre} - {self.monto} - {self.estado}"
+        metodo_nombre = self.metodo.nombre if self.metodo else "Sin método"
+        return f"{metodo_nombre} - {self.monto} - {self.estado}"
 
 
 
 # Create your models here.
 class Venta(models.Model):
+    numero_nota = models.CharField(max_length=20, unique = True)
 
     usuario = models.ForeignKey('users.User',on_delete=models.CASCADE)
     pago = models.OneToOneField(Pago, on_delete=models.SET_NULL, null = True, blank=True)
@@ -52,3 +55,15 @@ class DetalleVenta(models.Model):
     producto = models.ForeignKey('products.Producto',on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = 'detalle_venta'
+    
+    def save(self, *args, **kwargs):
+        self.subtotal = self.cantidad * self.precio_unitario
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.producto.nombre} x{self.cantidad} (${self.subtotal})"
+    
