@@ -3,7 +3,7 @@ from django.db import models
 
 class Marca(models.Model):
     #Representa al fabricante del producto (Ej: Samsung, LG, Sony).
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='marcas')
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     pais_origen = models.CharField(max_length=100, blank=True, null=True)
@@ -23,7 +23,7 @@ class Categoria(models.Model): #(Nivel 1)
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='categorias')
     class Meta:
         db_table = "categoria"
         verbose_name = "Categoría (Nivel 1)"
@@ -36,7 +36,7 @@ class Categoria(models.Model): #(Nivel 1)
 class SubCategoria(models.Model): #Nivel 2
     #Subcategoría o Nivel 2 (Ej: "Licuadoras", "Batidoras").
     # Enlace al padre (Nivel 1)
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True,related_name='subcategorias_empresa' )
     categoria = models.ForeignKey(
         Categoria, 
         on_delete=models.CASCADE, 
@@ -91,6 +91,17 @@ class Producto(models.Model):
     
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     esta_activo = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        """
+        Genera automáticamente un SKU único por empresa si no existe.
+        """
+        if not self.sku:
+            prefix = f"SKU-{self.empresa.id if self.empresa else 'GEN'}"
+            last = Producto.objects.filter(empresa=self.empresa).order_by('id').last()
+            next_num = 1 if not last else last.id + 1
+            self.sku = f"{prefix}-{next_num:05d}"
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "producto"
@@ -109,7 +120,7 @@ class DetalleProducto(models.Model):
     producto = models.OneToOneField(
         Producto, on_delete=models.CASCADE, related_name="detalle"
     )
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='detalles_producto')
     
     #Campos de ejemplo para la ficha técnica
     potencia = models.CharField(max_length=100, blank=True, null=True)
@@ -119,6 +130,15 @@ class DetalleProducto(models.Model):
     tecnologias = models.CharField(max_length=255, blank=True, null=True)
     largo_cable = models.CharField(max_length=100, blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "detalle_producto"
+        verbose_name = "Ficha Técnica (Detalle)"
+        verbose_name_plural = "Fichas Técnicas (Detalles)"
+
+    def __str__(self):
+        return f"Ficha técnica de {self.producto.nombre}"
+    
 # class ProductoCategoria(models.Model):
 #     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
 #     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
@@ -159,7 +179,7 @@ class ImagenProducto(models.Model):
     producto = models.ForeignKey(
         Producto, on_delete=models.CASCADE, related_name="imagenes"
     )
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='imagenes_producto')
     url = models.ImageField(upload_to="productos/")
     descripcion = models.CharField(max_length=255, blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
@@ -174,7 +194,7 @@ class ImagenProducto(models.Model):
 
 
 class Campania(models.Model):
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='campanias')
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     fecha_inicio = models.DateField()
@@ -190,7 +210,7 @@ class Campania(models.Model):
         return f"{self.nombre} ({self.fecha_inicio} - {self.fecha_fin})"
 
 class Descuento(models.Model):
-    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='descuentos')
     TIPO_CHOICES = [
         ("PORCENTAJE", "Porcentaje"),
         ("MONTO", "Monto Fijo"),
@@ -223,6 +243,7 @@ class Descuento(models.Model):
         db_table = "descuento"
         verbose_name = "Descuento"
         verbose_name_plural = "Descuentos"
+        unique_together = ("empresa", "producto", "sucursal")
 
     def __str__(self):
         return f"{self.nombre} - {self.tipo}"

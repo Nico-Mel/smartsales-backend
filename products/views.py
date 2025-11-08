@@ -24,28 +24,7 @@ from .serializers import (
     CampaniaSerializer,
 )
 from utils.permissions import ModulePermission
-
-class SoftDeleteViewSet(viewsets.ModelViewSet):
-
-    permission_classes = [ModulePermission]
-
-    def get_queryset(self):
-
-        return self.queryset
-    
-    @action(detail=True, methods=['post'])
-    def desactivar(self, request, pk=None):
-        obj = self.get_object()
-        obj.esta_activo = False
-        obj.save()
-        return Response({'detail': 'Desactivado correctamente.'}, status=status.HTTP_200_OK)
-    
-    @action(detail=True, methods=['post'])
-    def activar(self, request, pk=None):
-        obj = self.get_object()
-        obj.esta_activo = True
-        obj.save()
-        return Response({'detail': 'Activado correctamente.'}, status=status.HTTP_200_OK)
+from utils.viewsets import SoftDeleteViewSet
 
 class MarcaViewSet(SoftDeleteViewSet):
     queryset = Marca.objects.all().order_by('nombre')
@@ -67,7 +46,7 @@ class ProductoViewSet(SoftDeleteViewSet):
     serializer_class = ProductoSerializer
     module_name = "Producto"
 
-class DetalleProductoViewSet(viewsets.ModelViewSet):
+class DetalleProductoViewSet(SoftDeleteViewSet):
     queryset = DetalleProducto.objects.all()
     serializer_class = DetalleProductoSerializer
     module_name = "DetalleProducto"

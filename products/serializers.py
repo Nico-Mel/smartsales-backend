@@ -14,20 +14,29 @@ from .models import (
 
 
 class MarcaSerializer(serializers.ModelSerializer):
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
     class Meta:
         model = Marca
-        fields = "__all__"
+        fields = ["id", "nombre", "descripcion", "pais_origen", "esta_activo", "empresa", "empresa_nombre"]
 
 
-class SubCategoriaSerializer(serializers.ModelSerializer): 
-    """
-    Nivel 2: Ej. "Licuadoras").
-    """
-    categoria = serializers.PrimaryKeyRelatedField(queryset=Categoria.objects.all())
+class SubCategoriaSerializer(serializers.ModelSerializer):
+    categoria_nombre = serializers.CharField(source="categoria.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
 
     class Meta:
         model = SubCategoria
-        fields = "__all__"
+        fields = ["id", "nombre", "descripcion", "esta_activo", "categoria", "categoria_nombre", "empresa", "empresa_nombre"]
+
+    def validate(self, data):
+        """
+        Asegura que la subcategoría pertenezca a la misma empresa que la categoría.
+        """
+        categoria = data.get("categoria")
+        empresa = data.get("empresa")
+        if categoria and empresa and categoria.empresa != empresa:
+            raise serializers.ValidationError("La subcategoría debe pertenecer a la misma empresa que la categoría.")
+        return data
         
     def to_representation(self, instance):
 
@@ -41,62 +50,83 @@ class CategoriaSerializer(serializers.ModelSerializer): # <-- MODIFICADO
     Nivel 1: Ej. "ELECTROHOGAR".
     """
     subcategorias = SubCategoriaSerializer(many=True, read_only=True)
-
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
     class Meta:
         model = Categoria
-        fields = ["id", "nombre", "descripcion", "esta_activo", "subcategorias"]
+        fields = ["id", "nombre", "descripcion", "esta_activo", "empresa", "empresa_nombre", "subcategorias"]
 
 
 class ImagenProductoSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.CharField(source="producto.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
     class Meta:
         model = ImagenProducto
-        fields = "__all__"
+        fields = ["id", "producto", "producto_nombre", "url", "descripcion", "esta_activo", "empresa", "empresa_nombre"]
 
 
 class DetalleProductoSerializer(serializers.ModelSerializer): # <-- CAMBIADO
+    producto_nombre = serializers.CharField(source="producto.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
     class Meta:
         model = DetalleProducto
         # "Ficha Técnica"
         fields = [
             "id",
             "producto",
+            "producto_nombre",
             "potencia",
             "velocidades",
             "voltaje",
             "aire_frio",
             "tecnologias",
             "largo_cable",
+            "esta_activo",
+            "empresa",
+            "empresa_nombre",
         ]
 
-class ProductoSerializer(serializers.ModelSerializer): 
-
+class ProductoSerializer(serializers.ModelSerializer):
     detalle = DetalleProductoSerializer(read_only=True)
-    
     imagenes = ImagenProductoSerializer(many=True, read_only=True)
-
-    marca = serializers.PrimaryKeyRelatedField(
-        queryset=Marca.objects.all(), allow_null=True, required=False
-    )
-    subcategoria = serializers.PrimaryKeyRelatedField(
-        queryset=SubCategoria.objects.all(), allow_null=True, required=False
-    )
+    marca_nombre = serializers.CharField(source="marca.nombre", read_only=True)
+    subcategoria_nombre = serializers.CharField(source="subcategoria.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
 
     class Meta:
         model = Producto
         fields = [
             "id",
             "nombre",
-            "sku",            
-            "precio_venta",  
+            "sku",
+            "precio_venta",
             "descripcion",
-            "marca",          
-            "subcategoria",   
+            "marca",
+            "marca_nombre",
+            "subcategoria",
+            "subcategoria_nombre",
             "fecha_creacion",
             "esta_activo",
+            "empresa",
+            "empresa_nombre",
             "detalle",
             "imagenes",
         ]
 
+    def validate(self, data):
+        """
+        Valida que el producto, la marca y la subcategoría sean de la misma empresa.
+        """
+        empresa = data.get("empresa")
+        marca = data.get("marca")
+        subcategoria = data.get("subcategoria")
+
+        if marca and empresa and marca.empresa != empresa:
+            raise serializers.ValidationError("La marca pertenece a otra empresa.")
+        if subcategoria and empresa and subcategoria.empresa != empresa:
+            raise serializers.ValidationError("La subcategoría pertenece a otra empresa.")
+
+        return data
+    
     def to_representation(self, instance):
 
         representation = super().to_representation(instance)
@@ -108,17 +138,17 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 
 class CampaniaSerializer(serializers.ModelSerializer):
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
     class Meta:
         model = Campania
-        fields = "__all__"
+        fields = ["id", "nombre", "descripcion", "fecha_inicio", "fecha_fin", "esta_activo", "empresa", "empresa_nombre"]
 
 
 class DescuentoSerializer(serializers.ModelSerializer):
-    producto = serializers.PrimaryKeyRelatedField(queryset=Producto.objects.all())
-    sucursal = serializers.PrimaryKeyRelatedField(queryset=Sucursal.objects.all())
-    campania = serializers.PrimaryKeyRelatedField(
-        queryset=Campania.objects.all(), allow_null=True, required=False
-    )
+    producto_nombre = serializers.CharField(source="producto.nombre", read_only=True)
+    sucursal_nombre = serializers.CharField(source="sucursal.nombre", read_only=True)
+    campania_nombre = serializers.CharField(source="campania.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
 
     class Meta:
         model = Descuento
@@ -129,33 +159,41 @@ class DescuentoSerializer(serializers.ModelSerializer):
             "monto",
             "porcentaje",
             "producto",
+            "producto_nombre",
             "sucursal",
-            "esta_activo",
+            "sucursal_nombre",
             "campania",
+            "campania_nombre",
+            "esta_activo",
+            "empresa",
+            "empresa_nombre",
         ]
 
     def validate(self, data):
         """
-        Valida que según el tipo de descuento se use el campo correcto.
-        - Si tipo = PORCENTAJE → porcentaje debe existir y monto ser nulo.
-        - Si tipo = MONTO → monto debe existir y porcentaje ser nulo.
+        Valida coherencia entre tipo, monto y porcentaje, y la empresa de las relaciones.
         """
         tipo = data.get("tipo")
         monto = data.get("monto")
         porcentaje = data.get("porcentaje")
+        producto = data.get("producto")
+        sucursal = data.get("sucursal")
+        empresa = data.get("empresa")
 
+        # --- Validación de tipo de descuento
         if tipo == "PORCENTAJE":
             if porcentaje is None:
-                raise serializers.ValidationError(
-                    "Debe especificar un porcentaje para un descuento porcentual."
-                )
-            data["monto"] = None  # Limpia monto si no aplica
-
+                raise serializers.ValidationError("Debe especificar un porcentaje para un descuento porcentual.")
+            data["monto"] = None
         elif tipo == "MONTO":
             if monto is None:
-                raise serializers.ValidationError(
-                    "Debe especificar un monto fijo para un descuento de tipo MONTO."
-                )
-            data["porcentaje"] = None  # Limpia porcentaje si no aplica
+                raise serializers.ValidationError("Debe especificar un monto fijo para un descuento de tipo MONTO.")
+            data["porcentaje"] = None
+
+        # --- Validación de pertenencia a la misma empresa
+        if producto and empresa and producto.empresa != empresa:
+            raise serializers.ValidationError("El producto pertenece a otra empresa.")
+        if sucursal and empresa and sucursal.empresa != empresa:
+            raise serializers.ValidationError("La sucursal pertenece a otra empresa.")
 
         return data
