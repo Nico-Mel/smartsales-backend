@@ -2,6 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Cart(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     usuario = models.ForeignKey('users.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=True)
     estado = models.CharField(max_length=20, choices=[
@@ -18,6 +19,7 @@ class Cart(models.Model):
         return f"Carrito #{self.id} - {self.usuario.email} - {self.estado}"
     
 class CartItem(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     cart = models.ForeignKey(Cart, related_name = 'item',on_delete=models.CASCADE)
     producto = models.ForeignKey('products.Producto', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()

@@ -3,6 +3,7 @@ from django.db import models
 
 class Marca(models.Model):
     #Representa al fabricante del producto (Ej: Samsung, LG, Sony).
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     pais_origen = models.CharField(max_length=100, blank=True, null=True)
@@ -22,7 +23,7 @@ class Categoria(models.Model): #(Nivel 1)
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
-
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     class Meta:
         db_table = "categoria"
         verbose_name = "Categoría (Nivel 1)"
@@ -35,13 +36,14 @@ class Categoria(models.Model): #(Nivel 1)
 class SubCategoria(models.Model): #Nivel 2
     #Subcategoría o Nivel 2 (Ej: "Licuadoras", "Batidoras").
     # Enlace al padre (Nivel 1)
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     categoria = models.ForeignKey(
         Categoria, 
         on_delete=models.CASCADE, 
         related_name="subcategorias"
     )
     
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100, unique=True)    
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
 
@@ -60,6 +62,7 @@ class Producto(models.Model):
     El Producto principal. Este es el "SKU".
     Aquí va el precio, el stock y la info de venta.
     """
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True, 
                                    help_text="El párrafo de marketing (Información Adicional)")
@@ -106,6 +109,7 @@ class DetalleProducto(models.Model):
     producto = models.OneToOneField(
         Producto, on_delete=models.CASCADE, related_name="detalle"
     )
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     
     #Campos de ejemplo para la ficha técnica
     potencia = models.CharField(max_length=100, blank=True, null=True)
@@ -114,14 +118,40 @@ class DetalleProducto(models.Model):
     aire_frio = models.CharField(max_length=100, blank=True, null=True)
     tecnologias = models.CharField(max_length=255, blank=True, null=True)
     largo_cable = models.CharField(max_length=100, blank=True, null=True)
+    esta_activo = models.BooleanField(default=True)
+# class ProductoCategoria(models.Model):
+#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+#     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+#     esta_activo = models.BooleanField(default=True)
+#     empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+#     class Meta:
+#         db_table = "producto_categoria"
+#         unique_together = ("producto", "categoria")
 
-    class Meta:
-        db_table = "detalle_producto"
-        verbose_name = "Ficha Técnica (Detalle)"
-        verbose_name_plural = "Fichas Técnicas (Detalles)"
+#     def __str__(self):
+#         return f"{self.producto.nombre}-{self.categoria.nombre}"
 
-    def __str__(self):
-        return f"Ficha técnica de {self.producto.nombre}"
+
+# class DetalleProducto(models.Model):
+#     producto = models.OneToOneField(
+#         Producto, on_delete=models.CASCADE, related_name="detalle"
+#     )
+#     # cual es la diferencia entre ForeignKey y OneToOneField?
+#     marca = models.ForeignKey(
+#         Marca, on_delete=models.SET_NULL, null=True, related_name="detalles"
+#     )
+#     empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
+#     color = models.CharField(max_length=50, blank=True, null=True)
+#     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     esta_activo = models.BooleanField(default=True)
+
+#     class Meta:
+#         db_table = "detalle_producto"
+#         verbose_name = "Ficha Técnica (Detalle)"
+#         verbose_name_plural = "Fichas Técnicas (Detalles)"
+
+#     def __str__(self):
+#         return f"Ficha técnica de {self.producto.nombre}"
 
 
 class ImagenProducto(models.Model):
@@ -129,6 +159,7 @@ class ImagenProducto(models.Model):
     producto = models.ForeignKey(
         Producto, on_delete=models.CASCADE, related_name="imagenes"
     )
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     url = models.ImageField(upload_to="productos/")
     descripcion = models.CharField(max_length=255, blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
@@ -143,7 +174,7 @@ class ImagenProducto(models.Model):
 
 
 class Campania(models.Model):
-
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     fecha_inicio = models.DateField()
@@ -159,7 +190,7 @@ class Campania(models.Model):
         return f"{self.nombre} ({self.fecha_inicio} - {self.fecha_fin})"
 
 class Descuento(models.Model):
-
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     TIPO_CHOICES = [
         ("PORCENTAJE", "Porcentaje"),
         ("MONTO", "Monto Fijo"),

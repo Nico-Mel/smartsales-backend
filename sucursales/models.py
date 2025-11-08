@@ -1,3 +1,4 @@
+# sucursales/models.py
 from django.db import models
 from django.conf import settings
 #no importar nada de shipping para evitar dependencias circulares
@@ -11,6 +12,7 @@ class Departamento(models.Model):
         return self.nombre
 
 class Direccion(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True,related_name='direcciones')
     pais= models.CharField(max_length=50, default='Bolivia')
     ciudad = models.CharField(max_length=50)
     zona = models.CharField(max_length=50)
@@ -32,6 +34,7 @@ class Direccion(models.Model):
         return f"{self.calle} #{self.numero}, {self.zona or '' }, {self.ciudad},{self.departamento}, {self.pais}"
 
 class Sucursal(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     direccion = models.OneToOneField(Direccion, on_delete=models.CASCADE, null=True, blank=True)
     esta_activo = models.BooleanField(default=True)
@@ -42,6 +45,7 @@ class Sucursal(models.Model):
     def __str__(self):
         return self.nombre
 class StockSucursal(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     stock = models.PositiveBigIntegerField(default=0)
     producto = models.ForeignKey('products.Producto', on_delete=models.CASCADE)
     sucursal = models.ForeignKey(Sucursal, on_delete=models.CASCADE)

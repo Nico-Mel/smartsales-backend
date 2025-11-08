@@ -3,6 +3,7 @@ from django.db import models
 
 # Create your models here.
 class Agencia(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     contacto = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, blank=True, null=True)
@@ -16,6 +17,7 @@ class Agencia(models.Model):
         return self.nombre
     
 class Envio(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     venta = models.OneToOneField('ventas.Venta', on_delete=models.CASCADE)
     cliente = models.ForeignKey('users.User', on_delete=models.CASCADE)
     direccion_entrega= models.ForeignKey('sucursales.Direccion', on_delete=models.SET_NULL, null=True, blank=True)

@@ -49,13 +49,20 @@ class Venta(models.Model):
         db_table = 'venta'
     def __str__(self):
         return f"Venta #{self.id} - {self.usuario.email} - {self.total} - {self.estado}"
+    
+    def save(self, *args, **kwargs):
+        if self.numero_nota == 'TEMP-NOTA' or not self.numero_nota:
+            last = Venta.objects.all().order_by('id').last()
+            next_num = 1 if not last else last.id + 1
+            self.numero_nota = f"NV-{next_num:05d}"  # ejemplo: NV-00001
+        super().save(*args, **kwargs)
 
 class DetalleVenta(models.Model):
     venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name = 'detalles')
     producto = models.ForeignKey('products.Producto',on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         db_table = 'detalle_venta'

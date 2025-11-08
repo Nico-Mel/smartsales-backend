@@ -2,6 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Notificacion(models.Model):
+    empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True)
     titulo = models.CharField(max_length=255)
     mensaje = models.TextField()
     fecha_creada = models.DateTimeField(auto_now_add=True)

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "cart",
     "notifications",
     "bitacora",
+    "tenants",
     #'sales',
     #'reports',
     #'ai',
