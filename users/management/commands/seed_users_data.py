@@ -57,6 +57,7 @@ class Command(BaseCommand):
             # ---- Productos ----
             {'name': 'Marca', 'description': 'Gestión de marcas'},
             {'name': 'Categoria', 'description': 'Gestión de categorías de productos'},
+            {'name': 'SubCategoria', 'description': 'Gestión de subcategorías'}, 
             {'name': 'Producto', 'description': 'Gestión de productos'},
             {'name': 'ProductoCategoria', 'description': 'Relación producto-categoría'},
             {'name': 'DetalleProducto', 'description': 'Gestión de detalles del producto'},
@@ -64,8 +65,13 @@ class Command(BaseCommand):
             {'name': 'Campania', 'description': 'Gestión de campañas de marketing'},
             {'name': 'Descuento', 'description': 'Gestión de descuentos y promociones'},
 
-            # ---- Ventas (futuro) ----
+            # ---- Inventario y Sucursales ----
+            {'name': 'Sucursal', 'description': 'Gestión de sucursales'}, 
+            {'name': 'Stock', 'description': 'Gestión de stock en sucursales'}, 
+
+            # ---- Otros ----
             {'name': 'Sales', 'description': 'Gestión de ventas y reportes'},
+            {'name': 'Bitacora', 'description': 'Registro de acciones del sistema'},
         ]
 
         modules = {}
@@ -80,6 +86,7 @@ class Command(BaseCommand):
 
         # ====== 4️⃣ PERMISOS ======
         perms_data = [
+
             # ---- ADMIN: acceso total a todo ----
             {'role': 'ADMIN', 'module': 'User', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'Role', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
@@ -88,14 +95,19 @@ class Command(BaseCommand):
 
             {'role': 'ADMIN', 'module': 'Marca', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'Categoria', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
+            {'role': 'ADMIN', 'module': 'SubCategoria', 'view': 1, 'create': 1, 'update': 1, 'delete': 1}, 
             {'role': 'ADMIN', 'module': 'Producto', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'ProductoCategoria', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'DetalleProducto', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'ImagenProducto', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'Campania', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
             {'role': 'ADMIN', 'module': 'Descuento', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
-            {'role': 'ADMIN', 'module': 'Sales', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
+            
+            {'role': 'ADMIN', 'module': 'Sucursal', 'view': 1, 'create': 1, 'update': 1, 'delete': 1}, 
+            {'role': 'ADMIN', 'module': 'Stock', 'view': 1, 'create': 1, 'update': 1, 'delete': 1}, 
 
+            {'role': 'ADMIN', 'module': 'Sales', 'view': 1, 'create': 1, 'update': 1, 'delete': 1},
+            {'role': 'ADMIN', 'module': 'Bitacora', 'view': 1, 'create': 1, 'update': 1, 'delete': 1}, 
             # ---- SALES_AGENT: permisos limitados ----
             {'role': 'SALES_AGENT', 'module': 'Producto', 'view': 1, 'create': 0, 'update': 0, 'delete': 0},
             {'role': 'SALES_AGENT', 'module': 'Campania', 'view': 1, 'create': 0, 'update': 0, 'delete': 0},
