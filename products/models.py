@@ -4,7 +4,7 @@ from django.db import models
 class Marca(models.Model):
     #Representa al fabricante del producto (Ej: Samsung, LG, Sony).
     empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='marcas')
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     pais_origen = models.CharField(max_length=100, blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
@@ -13,14 +13,14 @@ class Marca(models.Model):
         db_table = "marca"
         verbose_name = "Marca"
         verbose_name_plural = "Marcas"
-
+        unique_together = ("empresa", "nombre")
     def __str__(self):
         return self.nombre
 
 
 class Categoria(models.Model): #(Nivel 1)
     #Categoría principal o de Nivel 1 (Ej: "ELECTROHOGAR", "LÍNEA BLANCA")
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
     empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True, related_name='categorias')
@@ -28,6 +28,7 @@ class Categoria(models.Model): #(Nivel 1)
         db_table = "categoria"
         verbose_name = "Categoría (Nivel 1)"
         verbose_name_plural = "Categorías (Nivel 1)"
+        unique_together = ("empresa", "nombre")
 
     def __str__(self):
         return self.nombre
@@ -43,7 +44,7 @@ class SubCategoria(models.Model): #Nivel 2
         related_name="subcategorias"
     )
     
-    nombre = models.CharField(max_length=100, unique=True)    
+    nombre = models.CharField(max_length=100)    
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
 
@@ -52,6 +53,7 @@ class SubCategoria(models.Model): #Nivel 2
         verbose_name = "Subcategoría (Nivel 2)"
         verbose_name_plural = "Subcategorías (Nivel 2)"
         ordering = ['categoria__nombre', 'nombre']
+        unique_together = ("empresa", "nombre")
 
     def __str__(self):
         # Muestra "ELECTROHOGAR > Licuadoras"
@@ -68,7 +70,7 @@ class Producto(models.Model):
                                    help_text="El párrafo de marketing (Información Adicional)")
     
     # <-- NUEVO: El SKU, identificador único de negocio
-    sku = models.CharField(max_length=100, unique=True, blank=True, null=True, 
+    sku = models.CharField(max_length=100, blank=True, null=True, 
                            help_text="Código único de producto (SKU) para gestión e inventario")
 
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -107,6 +109,7 @@ class Producto(models.Model):
         db_table = "producto"
         verbose_name = "Producto (SKU)"
         verbose_name_plural = "Productos (SKUs)"
+        unique_together = ("empresa", "sku") 
 
     def __str__(self):
         return f"{self.nombre} ({self.sku or 'Sin SKU'})"
@@ -205,6 +208,7 @@ class Campania(models.Model):
         db_table = "campania"
         verbose_name = "Campaña"
         verbose_name_plural = "Campañas"
+        unique_together = ("empresa", "nombre")
 
     def __str__(self):
         return f"{self.nombre} ({self.fecha_inicio} - {self.fecha_fin})"

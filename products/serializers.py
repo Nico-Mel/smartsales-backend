@@ -14,10 +14,14 @@ from .models import (
 
 
 class MarcaSerializer(serializers.ModelSerializer):
-    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
+    empresa_nombre = serializers.SerializerMethodField()
+
     class Meta:
         model = Marca
         fields = ["id", "nombre", "descripcion", "pais_origen", "esta_activo", "empresa", "empresa_nombre"]
+
+    def get_empresa_nombre(self, obj):
+        return obj.empresa.nombre if obj.empresa else None
 
 
 class SubCategoriaSerializer(serializers.ModelSerializer):

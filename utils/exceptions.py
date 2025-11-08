@@ -1,6 +1,7 @@
 # utils/exceptions.py
 from rest_framework.exceptions import APIException
 from rest_framework import status
+import traceback
 
 class PermissionDeniedException(APIException):
     status_code = status.HTTP_403_FORBIDDEN
@@ -19,8 +20,13 @@ def custom_exception_handler(exc, context):
             "detail": str(getattr(exc, 'detail', exc))
         }
     else:
+        # 🔍 Mostrar traza completa en consola
+        print("\n[EXCEPTION CAPTURADA EN custom_exception_handler]")
+        traceback.print_exc()
+        print("[===========================]\n")
+
         response = Response(
-            {"detail": "Internal server error."},
+            {"detail": str(exc)},
             status=500
         )
 
