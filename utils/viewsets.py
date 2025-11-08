@@ -1,4 +1,4 @@
-# 
+# utils/viewsets.py
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,25 +8,43 @@ from utils.logging_utils import log_action
 class SoftDeleteViewSet(viewsets.ModelViewSet):
     """
     Clase base reutilizable que agrega:
-    - Acciones para activar/desactivar (soft delete) registros.
-    - Integración con permisos por módulo y acción.
+    - Filtro automático de registros activos.
+    - Asignación automática de empresa si el modelo tiene ese campo.
     - Registro automático en la Bitácora.
+    - Acciones para activar y desactivar (soft delete).
     """
     permission_classes = [ModulePermission]
 
     def get_queryset(self):
         """
-        Si deseas filtrar solo los activos, descomenta:
-        return self.queryset.filter(esta_activo=True)
+        Filtra automáticamente solo los activos y de la empresa del usuario
         """
-        # return self.queryset
-        return self.queryset.filter(esta_activo=True)
+        queryset = self.queryset
+        user = self.request.user
+
+        # Filtra por empresa solo si el modelo tiene ese campo
+        if hasattr(self.queryset.model, 'empresa') and getattr(user, 'empresa', None):
+            queryset = queryset.filter(empresa=user.empresa)
+
+        # Filtra solo los activos si el modelo tiene "esta_activo"
+        if hasattr(self.queryset.model, 'esta_activo'):
+            queryset = queryset.filter(esta_activo=True)
+
+        return queryset
     
     def perform_create(self, serializer):
-        """Registra la creacion en la bitacora automaticamente"""
-        instance = serializer.save()
+        """Guarda automáticamente la empresa y registra en bitácora"""
+        user = self.request.user
+        empresa = getattr(user, 'empresa', None)
+
+        # Si el modelo tiene campo empresa, lo agrega
+        if hasattr(self.queryset.model, 'empresa') and empresa:
+            instance = serializer.save(empresa=empresa)
+        else:
+            instance = serializer.save()
+
         log_action(
-            user=self.request.user,
+            user=user,
             modulo=getattr(self, 'module_name', self.__class__.__name__),
             accion='CREAR',
             descripcion=f"Creó {self.module_name}: {instance}",
@@ -46,9 +64,17 @@ class SoftDeleteViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def desactivar(self, request, pk=None):
-        obj = self.get_object()
-        obj.esta_activo = False
-        obj.save()
+        obj = self.queryset.model.objects.filter(pk=pk).first()
+        if not obj:
+            return Response(
+                {'detail': f'{self.module_name} no encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if hasattr(obj, 'esta_activo'):
+            obj.esta_activo = False
+            obj.save()
+
         log_action(
             user=request.user,
             modulo=getattr(self, 'module_name', self.__class__.__name__),
@@ -61,9 +87,13 @@ class SoftDeleteViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def activar(self, request, pk=None):
-        obj = self.get_object()
+        obj = self.queryset.model.objects.filter(pk=pk).first()
+        if not obj:
+            return Response({'detail': f'{self.module_name} no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
         obj.esta_activo = True
         obj.save()
+
         log_action(
             user=request.user,
             modulo=getattr(self, 'module_name', self.__class__.__name__),

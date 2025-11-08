@@ -10,8 +10,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Role, Module, Permission
 from .serializers import UserSerializer, RoleSerializer, ModuleSerializer, PermissionSerializer   
 from utils.permissions import ModulePermission
+from utils.viewsets import SoftDeleteViewSet
 # from django.contrib.auth import authenticate
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(SoftDeleteViewSet):
     """
     CRUD para la gestión de usuarios del sistema.
     Integra control de permisos por módulo y soporte
@@ -25,37 +26,43 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='registrar')
     def create_user(self, request):
         """
-        Permite crear un nuevo usuario indicando el role_id
+        Permite crear un nuevo usuario asociado a la misma empresa del usuario actual.
         """
         data = request.data
         role_id = data.get("role_id")
 
         if not role_id:
-            return Response(
-                {"detail":"El campo 'role_id' es obligatorio"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "El campo 'role_id' es obligatorio."},
+                            status=status.HTTP_400_BAD_REQUEST)
         try:
             role = Role.objects.get(id=role_id)
         except Role.DoesNotExist:
-            return Response(
-                {"detail":"El rol especificado no existe"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({"detail": "El rol especificado no existe."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        empresa = request.user.empresa
+        if not empresa:
+            return Response({"detail": "El usuario actual no pertenece a ninguna empresa."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         user = User.objects.create_user(
             email=data['email'],
             password=data['password'],
-            nombre=data.get('nombre',''),
-            apellido=data.get('apellido',''),
-            telefono=data.get('telefono',''),
-            role=role
+            nombre=data.get('nombre', ''),
+            apellido=data.get('apellido', ''),
+            telefono=data.get('telefono', ''),
+            role=role,
+            empresa=empresa
         )
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-    
 
-class RoleViewSet(viewsets.ModelViewSet):
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+     
+
+class RoleViewSet(SoftDeleteViewSet):
     """
-    CRUD para roles del sistema con control de permisos.
+    CRUD de roles por empresa.
+    Solo los roles de la empresa del usuario logueado.
     """
     queryset = Role.objects.all().order_by('id')
     serializer_class = RoleSerializer
@@ -72,9 +79,10 @@ class ModuleViewSet(viewsets.ModelViewSet):
     permission_classes = [ModulePermission]
     module_name = "Module"
 
-class PermissionViewSet(viewsets.ModelViewSet):
+class PermissionViewSet(SoftDeleteViewSet):
     """
-    CRUD para permisos por rol y módulo con control granular.
+    CRUD de permisos por rol y módulo.
+    Aplica filtrado por empresa y bitácora.
     """
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer

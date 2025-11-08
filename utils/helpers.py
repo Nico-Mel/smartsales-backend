@@ -1,3 +1,4 @@
+# utils/helpers.py
 def get_client_ip(request):
     """
     Obtiene la dirección IP del cliente desde la solicitud.

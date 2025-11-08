@@ -1,15 +1,15 @@
 # users/management/commands/seed_users_data.py
 from django.core.management.base import BaseCommand
-from users.models import Role, Module, Permission, User, UserStatus
-
-# ✅ Importa el modelo Sucursal
-from sucursales.models import Sucursal
+from users.models import Role, Module, Permission, User
+from tenants.models import Empresa, Plan
+from sucursales.models import Sucursal, Direccion, Departamento
 
 
 class Command(BaseCommand):
-    help = 'Seeder inicial: Roles, Modules, Permissions, Usuario Admin y Sucursal base'
+    help = "Actualiza los roles, empresa y campos del usuario admin existente sin duplicar registros"
 
     def handle(self, *args, **kwargs):
+        self.stdout.write(self.style.MIGRATE_HEADING("=== ACTUALIZANDO DATOS SmartSales365 EXISTENTES ==="))
 
         # ====== 1️⃣ ROLES ======
         roles_data = [
@@ -138,8 +138,55 @@ class Command(BaseCommand):
             nombre="Sucursal Central",
             defaults={'esta_activo': True}
         )
-        msg = "creada" if created else "ya existía"
-        self.stdout.write(self.style.SUCCESS(f"🏢 Sucursal {msg}: {sucursal.nombre}"))
+        empresa, _ = Empresa.objects.get_or_create(
+            nombre="SmartSales S.R.L.",
+            defaults={"nit": "987654321", "plan": plan, "esta_activo": True},
+        )
+        self.stdout.write(self.style.SUCCESS(f"🏢 Empresa asegurada: {empresa.nombre}"))
 
+        # ================================
+        # 2️⃣ ROLES EXISTENTES → Actualizar empresa
+        # ================================
+        roles_actualizados = 0
+        for role in Role.objects.all():
+            if not role.empresa:
+                role.empresa = empresa
+                role.save()
+                roles_actualizados += 1
+        self.stdout.write(self.style.SUCCESS(f"✅ Roles actualizados con empresa: {roles_actualizados}"))
 
-        self.stdout.write(self.style.SUCCESS("\n🎉 Seeder completo: Roles, módulos, permisos y sucursal base creados exitosamente ✅"))
+        # ================================
+        # 3️⃣ USUARIO ADMIN EXISTENTE
+        # ================================
+        admin_email = "admin@smartsales.com"
+        try:
+            admin_user = User.objects.get(email=admin_email)
+            admin_user.empresa = empresa
+            admin_user.role = Role.objects.filter(name="ADMIN").first()
+            admin_user.save()
+            self.stdout.write(self.style.SUCCESS(f"👑 Usuario admin actualizado: {admin_user.email}"))
+        except User.DoesNotExist:
+            self.stdout.write(self.style.ERROR("❌ No se encontró usuario admin@smartsales.com"))
+
+        # ================================
+        # 4️⃣ SUCURSAL BASE (si no existe)
+        # ================================
+        departamento, _ = Departamento.objects.get_or_create(nombre="La Paz")
+        direccion, _ = Direccion.objects.get_or_create(
+            empresa=empresa,
+            pais="Bolivia",
+            ciudad="La Paz",
+            zona="Centro",
+            calle="Av. Mariscal Santa Cruz",
+            numero="101",
+            departamento=departamento,
+        )
+        Sucursal.objects.get_or_create(
+            empresa=empresa,
+            nombre="Sucursal Central",
+            direccion=direccion,
+            defaults={"esta_activo": True},
+        )
+        self.stdout.write(self.style.SUCCESS("🏬 Sucursal base asegurada"))
+
+        self.stdout.write(self.style.SUCCESS("\n🎉 ACTUALIZACIÓN COMPLETA SIN DUPLICADOS ✅"))

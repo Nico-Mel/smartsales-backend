@@ -1,3 +1,4 @@
+# utils/logging_utils.py
 from bitacora.models import Bitacora
 from utils.helpers import get_client_ip
 

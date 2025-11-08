@@ -20,13 +20,17 @@ class LoginView(TokenObtainPairView):
             try:
                 from users.models import User
                 user = User.objects.get(email=email)
-                log_action(
-                    user=user,
-                    modulo="Autenticación",
-                    accion="LOGIN",
-                    descripcion=f"Inicio de sesión exitoso de {user.email}",
-                    request=request
-                )
+                if user:
+                    try:
+                        log_action(
+                            user=user,
+                            modulo="Autenticación",
+                            accion="LOGIN",
+                            descripcion=f"Inicio de sesión exitoso de {user.email}",
+                            request=request
+                        )
+                    except Exception as e:
+                        print("[ERROR LOG_ACTION]", e)
             except User.DoesNotExist:
                 pass
         return response

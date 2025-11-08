@@ -17,7 +17,7 @@ class RoleSerializer(serializers.ModelSerializer):
 class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = ['id', 'name', 'description', 'is_active']
+        fields = ['id', 'name', 'description', 'esta_activo']
 
 
 class PermissionSerializer(serializers.ModelSerializer):
