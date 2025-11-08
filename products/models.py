@@ -1,77 +1,131 @@
 # products/models.py
 from django.db import models
 
-
-# Create your models here.
 class Marca(models.Model):
+    #Representa al fabricante del producto (Ej: Samsung, LG, Sony).
     nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    pais_origen = models.CharField(max_length=100, blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = "marca"
+        verbose_name = "Marca"
+        verbose_name_plural = "Marcas"
 
     def __str__(self):
         return self.nombre
 
 
-class Categoria(models.Model):
+class Categoria(models.Model): #(Nivel 1)
+    #Categoría principal o de Nivel 1 (Ej: "ELECTROHOGAR", "LÍNEA BLANCA")
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = "categoria"
+        verbose_name = "Categoría (Nivel 1)"
+        verbose_name_plural = "Categorías (Nivel 1)"
 
     def __str__(self):
         return self.nombre
 
 
-class Producto(models.Model):
-    nombre = models.CharField(max_length=200)
+class SubCategoria(models.Model): #Nivel 2
+    #Subcategoría o Nivel 2 (Ej: "Licuadoras", "Batidoras").
+    # Enlace al padre (Nivel 1)
+    categoria = models.ForeignKey(
+        Categoria, 
+        on_delete=models.CASCADE, 
+        related_name="subcategorias"
+    )
+    
+    nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+    esta_activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "subcategoria" # Nuevo nombre de tabla
+        verbose_name = "Subcategoría (Nivel 2)"
+        verbose_name_plural = "Subcategorías (Nivel 2)"
+        ordering = ['categoria__nombre', 'nombre']
+
+    def __str__(self):
+        # Muestra "ELECTROHOGAR > Licuadoras"
+        return f"{self.categoria.nombre} > {self.nombre}"
+
+class Producto(models.Model):
+    """
+    El Producto principal. Este es el "SKU".
+    Aquí va el precio, el stock y la info de venta.
+    """
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True, 
+                                   help_text="El párrafo de marketing (Información Adicional)")
+    
+    # <-- NUEVO: El SKU, identificador único de negocio
+    sku = models.CharField(max_length=100, unique=True, blank=True, null=True, 
+                           help_text="Código único de producto (SKU) para gestión e inventario")
+
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    marca = models.ForeignKey(
+        Marca,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="productos"
+    )
+    
+    subcategoria = models.ForeignKey(
+        SubCategoria,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="productos"
+    )
+    
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     esta_activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = "producto"
+        verbose_name = "Producto (SKU)"
+        verbose_name_plural = "Productos (SKUs)"
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.sku or 'Sin SKU'})"
 
-
-class ProductoCategoria(models.Model):
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
-    esta_activo = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = "producto_categoria"
-        unique_together = ("producto", "categoria")
-
-    def __str__(self):
-        return f"{self.producto.nombre}-{self.categoria.nombre}"
-
-
-class DetalleProducto(models.Model):
+class DetalleProducto(models.Model): 
+    """
+    La "Ficha Técnica" (Características) del producto.
+    Es un anexo con datos extra.
+    """
+    # Relación Uno-a-Uno. Un producto tiene UNA ficha técnica.
     producto = models.OneToOneField(
         Producto, on_delete=models.CASCADE, related_name="detalle"
     )
-    # cual es la diferencia entre ForeignKey y OneToOneField?
-    marca = models.ForeignKey(
-        Marca, on_delete=models.SET_NULL, null=True, related_name="detalles"
-    )
-    color = models.CharField(max_length=50, blank=True, null=True)
-    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    esta_activo = models.BooleanField(default=True)
+    
+    #Campos de ejemplo para la ficha técnica
+    potencia = models.CharField(max_length=100, blank=True, null=True)
+    velocidades = models.CharField(max_length=100, blank=True, null=True)
+    voltaje = models.CharField(max_length=100, blank=True, null=True)
+    aire_frio = models.CharField(max_length=100, blank=True, null=True)
+    tecnologias = models.CharField(max_length=255, blank=True, null=True)
+    largo_cable = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         db_table = "detalle_producto"
+        verbose_name = "Ficha Técnica (Detalle)"
+        verbose_name_plural = "Fichas Técnicas (Detalles)"
 
     def __str__(self):
-        return f"{self.producto.nombre} ({self.marca.nombre if self.marca else 'Sin Marca'})"
+        return f"Ficha técnica de {self.producto.nombre}"
 
 
 class ImagenProducto(models.Model):
+
     producto = models.ForeignKey(
         Producto, on_delete=models.CASCADE, related_name="imagenes"
     )
@@ -81,12 +135,15 @@ class ImagenProducto(models.Model):
 
     class Meta:
         db_table = "imagen_producto"
+        verbose_name = "Imagen de Producto"
+        verbose_name_plural = "Imágenes de Producto"
 
     def __str__(self):
         return f"Imagen de {self.producto.nombre}"
 
 
 class Campania(models.Model):
+
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     fecha_inicio = models.DateField()
@@ -95,12 +152,14 @@ class Campania(models.Model):
 
     class Meta:
         db_table = "campania"
+        verbose_name = "Campaña"
+        verbose_name_plural = "Campañas"
 
     def __str__(self):
         return f"{self.nombre} ({self.fecha_inicio} - {self.fecha_fin})"
 
-
 class Descuento(models.Model):
+
     TIPO_CHOICES = [
         ("PORCENTAJE", "Porcentaje"),
         ("MONTO", "Monto Fijo"),
@@ -113,9 +172,11 @@ class Descuento(models.Model):
     )
 
     esta_activo = models.BooleanField(default=True)
+    
     producto = models.ForeignKey(
         Producto, on_delete=models.CASCADE, related_name="descuentos"
     )
+    
     sucursal = models.ForeignKey(
         "sucursales.Sucursal", on_delete=models.CASCADE, related_name="descuentos"
     )
@@ -129,6 +190,8 @@ class Descuento(models.Model):
 
     class Meta:
         db_table = "descuento"
+        verbose_name = "Descuento"
+        verbose_name_plural = "Descuentos"
 
     def __str__(self):
         return f"{self.nombre} - {self.tipo}"

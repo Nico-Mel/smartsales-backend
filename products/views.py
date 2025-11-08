@@ -3,25 +3,34 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Marca, Categoria, Producto, ProductoCategoria, DetalleProducto, ImagenProducto, Descuento, Campania
-from .serializers import (MarcaSerializer, CategoriaSerializer, ProductoSerializer,
-                          ProductoCategoriaSerializer, DetalleProductoSerializer, ImagenProductoSerializer, DescuentoSerializer, CampaniaSerializer)
+from .models import (
+    Marca,
+    Categoria,
+    SubCategoria,
+    Producto,
+    DetalleProducto,
+    ImagenProducto,
+    Descuento,
+    Campania,
+)
+from .serializers import (
+    MarcaSerializer,
+    CategoriaSerializer,
+    SubCategoriaSerializer, 
+    ProductoSerializer,
+    DetalleProductoSerializer,
+    ImagenProductoSerializer,
+    DescuentoSerializer,
+    CampaniaSerializer,
+)
 from utils.permissions import ModulePermission
 
-# Create your views here.
 class SoftDeleteViewSet(viewsets.ModelViewSet):
-    """
-    Clase base reutilizable que agrega:
-    - acciones para activar/desactivar (soft delete) registros.
-    -Integración con permisos por módulo y acción.
-    """
+
     permission_classes = [ModulePermission]
 
     def get_queryset(self):
-        """
-        Si deseas filtrar solo los activos, descomenta:
-        return self.queryset.filter(esta_activo=True)
-        """
+
         return self.queryset
     
     @action(detail=True, methods=['post'])
@@ -48,25 +57,26 @@ class CategoriaViewSet(SoftDeleteViewSet):
     serializer_class = CategoriaSerializer
     module_name = "Categoria"
 
+class SubCategoriaViewSet(SoftDeleteViewSet): 
+    queryset = SubCategoria.objects.all().order_by('categoria__nombre', 'nombre')
+    serializer_class = SubCategoriaSerializer
+    module_name = "SubCategoria"
+
 class ProductoViewSet(SoftDeleteViewSet):
     queryset = Producto.objects.all().order_by('nombre')
     serializer_class = ProductoSerializer
     module_name = "Producto"
 
-class ProductoCategoriaViewSet(viewsets.ModelViewSet):
-    queryset = ProductoCategoria.objects.all()
-    serializer_class = ProductoCategoriaSerializer
-    module_name = "ProductoCategoria"
-
-class DetalleProductoViewSet(SoftDeleteViewSet):
+class DetalleProductoViewSet(viewsets.ModelViewSet):
     queryset = DetalleProducto.objects.all()
     serializer_class = DetalleProductoSerializer
     module_name = "DetalleProducto"
 
-class ImagenProductoViewSet(viewsets.ModelViewSet):
+class ImagenProductoViewSet(SoftDeleteViewSet): 
     queryset = ImagenProducto.objects.all()
     serializer_class = ImagenProductoSerializer
     module_name = "ImagenProducto"
+
 
 class CampaniaViewSet(SoftDeleteViewSet):
     queryset = Campania.objects.all()

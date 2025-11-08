@@ -4,8 +4,8 @@ from sucursales.models import Sucursal
 from .models import (
     Marca,
     Categoria,
+    SubCategoria,      
     Producto,
-    ProductoCategoria,
     DetalleProducto,
     ImagenProducto,
     Descuento,
@@ -19,10 +19,32 @@ class MarcaSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CategoriaSerializer(serializers.ModelSerializer):
+class SubCategoriaSerializer(serializers.ModelSerializer): 
+    """
+    Nivel 2: Ej. "Licuadoras").
+    """
+    categoria = serializers.PrimaryKeyRelatedField(queryset=Categoria.objects.all())
+
+    class Meta:
+        model = SubCategoria
+        fields = "__all__"
+        
+    def to_representation(self, instance):
+
+        representation = super().to_representation(instance)
+        representation['categoria'] = instance.categoria.nombre
+        return representation
+
+
+class CategoriaSerializer(serializers.ModelSerializer): # <-- MODIFICADO
+    """
+    Nivel 1: Ej. "ELECTROHOGAR".
+    """
+    subcategorias = SubCategoriaSerializer(many=True, read_only=True)
+
     class Meta:
         model = Categoria
-        fields = "__all__"
+        fields = ["id", "nombre", "descripcion", "esta_activo", "subcategorias"]
 
 
 class ImagenProductoSerializer(serializers.ModelSerializer):
@@ -31,36 +53,58 @@ class ImagenProductoSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class DetalleProductoSerializer(serializers.ModelSerializer):
-    producto = serializers.PrimaryKeyRelatedField(queryset=Producto.objects.all())
-    marca = serializers.PrimaryKeyRelatedField(queryset=Marca.objects.all())
-
+class DetalleProductoSerializer(serializers.ModelSerializer): # <-- CAMBIADO
     class Meta:
         model = DetalleProducto
-        fields = ["id", "producto", "marca", "color", "precio_venta", "esta_activo"]
+        # "Ficha Técnica"
+        fields = [
+            "id",
+            "producto",
+            "potencia",
+            "velocidades",
+            "voltaje",
+            "aire_frio",
+            "tecnologias",
+            "largo_cable",
+        ]
 
+class ProductoSerializer(serializers.ModelSerializer): 
 
-class ProductoSerializer(serializers.ModelSerializer):
     detalle = DetalleProductoSerializer(read_only=True)
+    
     imagenes = ImagenProductoSerializer(many=True, read_only=True)
+
+    marca = serializers.PrimaryKeyRelatedField(
+        queryset=Marca.objects.all(), allow_null=True, required=False
+    )
+    subcategoria = serializers.PrimaryKeyRelatedField(
+        queryset=SubCategoria.objects.all(), allow_null=True, required=False
+    )
 
     class Meta:
         model = Producto
         fields = [
             "id",
             "nombre",
+            "sku",            
+            "precio_venta",  
             "descripcion",
+            "marca",          
+            "subcategoria",   
             "fecha_creacion",
             "esta_activo",
             "detalle",
             "imagenes",
         ]
 
+    def to_representation(self, instance):
 
-class ProductoCategoriaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductoCategoria
-        fields = "__all__"
+        representation = super().to_representation(instance)
+        if instance.marca:
+            representation['marca'] = instance.marca.nombre
+        if instance.subcategoria:
+            representation['subcategoria'] = str(instance.subcategoria)
+        return representation
 
 
 class CampaniaSerializer(serializers.ModelSerializer):
