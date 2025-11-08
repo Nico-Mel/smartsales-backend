@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+#no importar nada de shipping para evitar dependencias circulares
 class Departamento(models.Model):
     nombre = models.CharField(max_length=100,  unique=True)
     
@@ -9,13 +11,20 @@ class Departamento(models.Model):
         return self.nombre
 
 class Direccion(models.Model):
-    pais= models.CharField(max_length=50)
+    pais= models.CharField(max_length=50, default='Bolivia')
     ciudad = models.CharField(max_length=50)
     zona = models.CharField(max_length=50)
     calle = models.CharField(max_length=100)
     numero = models.CharField(max_length=10)
     referencia = models.CharField(blank=True, null=True)
     departamento = models.ForeignKey('sucursales.Departamento', on_delete = models.CASCADE, null = True, blank = True)
+    cliente = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name="direcciones",
+        null=True, 
+        blank=True
+    )
     class Meta:
         db_table = 'direccion'
 
