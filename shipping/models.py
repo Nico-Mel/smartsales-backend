@@ -38,4 +38,4 @@ class Envio(models.Model):
         db_table='envio'
     
     def __str__(self):
-        return f"Envio #{self.numero_seguimiento} - {self.estado}"
+        return f"Envio #{self.id} - {self.estado}"
