@@ -3,15 +3,32 @@ from django.db import models
 from django.conf import settings
 #no importar nada de shipping para evitar dependencias circulares
 class Departamento(models.Model):
-    nombre = models.CharField(max_length=100,  unique=True)
+    """
+    Representa un departamento o región dentro de una empresa (multi-tenant).
+    Ejemplo: 'Santa Cruz', 'La Paz', etc.
+    """
+    empresa = models.ForeignKey(
+        'tenants.Empresa',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='departamentos'
+    )
+    nombre = models.CharField(max_length=100)
     
     class Meta:
         db_table = 'departamento'
+        unique_together = ('empresa', 'nombre')
 
     def __str__(self):
+        if self.empresa:
+            return f"{self.nombre} ({self.empresa.nombre})"
         return self.nombre
 
 class Direccion(models.Model):
+    """
+    Dirección física. Puede pertenecer a una empresa, cliente o sucursal.
+    """
     empresa = models.ForeignKey('tenants.Empresa', on_delete=models.CASCADE, null=True, blank=True,related_name='direcciones')
     pais= models.CharField(max_length=50, default='Bolivia')
     ciudad = models.CharField(max_length=50)
@@ -41,6 +58,7 @@ class Sucursal(models.Model):
 
     class Meta:
         db_table = 'sucursal'
+        unique_together = ('empresa', 'nombre')
 
     def __str__(self):
         return self.nombre
@@ -54,6 +72,7 @@ class StockSucursal(models.Model):
         unique_together = ('producto', 'sucursal')
         verbose_name = 'Stock en Sucursal'
         verbose_name_plural = 'Stock en Sucursales'
+        unique_together = ('empresa', 'producto', 'sucursal')
     
     def __str__(self):
         return f"{self.producto.nombre} - {self.sucursal.nombre} - {self.stock}"

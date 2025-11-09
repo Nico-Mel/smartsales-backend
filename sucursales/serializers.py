@@ -1,82 +1,98 @@
-#sucursales/serializers.py
 from rest_framework import serializers
 from .models import Departamento, Direccion, Sucursal, StockSucursal
-from products.models import Producto # Importamos Producto para el StockSerializer
-#no importar nada de shipping para evitar dependencias circulares
+from tenants.models import Empresa
+from products.models import Producto
 
 
 class DepartamentoSerializer(serializers.ModelSerializer):
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
+
     class Meta:
         model = Departamento
-        fields = "__all__"
+        fields = ["id", "nombre", "empresa", "empresa_nombre"]
+
 
 class DireccionSerializer(serializers.ModelSerializer):
-    departamento = serializers.PrimaryKeyRelatedField(
-        queryset=Departamento.objects.all(),
-        allow_null=True
-    )
-    
+    departamento_nombre = serializers.CharField(source="departamento.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
+    cliente_email = serializers.CharField(source="cliente.email", read_only=True)
+
     class Meta:
         model = Direccion
-        fields = "__all__"
+        fields = [
+            "id",
+            "pais",
+            "ciudad",
+            "zona",
+            "calle",
+            "numero",
+            "referencia",
+            "departamento",
+            "departamento_nombre",
+            "empresa",
+            "empresa_nombre",
+            "cliente",
+            "cliente_email",
+        ]
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if instance.departamento:
-            representation['departamento'] = instance.departamento.nombre
-        return representation
 
 class SucursalSerializer(serializers.ModelSerializer):
-    direccion = DireccionSerializer()
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
+    direccion_detalle = DireccionSerializer(source="direccion", read_only=True)
 
     class Meta:
         model = Sucursal
-        fields = ['id', 'nombre', 'direccion', 'esta_activo']
+        fields = [
+            "id",
+            "nombre",
+            "direccion",
+            "direccion_detalle",
+            "esta_activo",
+            "empresa",
+            "empresa_nombre",
+        ]
 
-    def create(self, validated_data):
+    def validate(self, data):
         """
-        Maneja la creación de la Sucursal y su Dirección anidada.
+        Verifica que la dirección pertenezca a la misma empresa.
         """
-        # Saca los datos de la dirección del JSON
-        direccion_data = validated_data.pop('direccion')
-        
-        # 1. Crea la Dirección primero
-        direccion = Direccion.objects.create(**direccion_data)
-        
-        # 2. Crea la Sucursal, asignando la dirección recién creada
-        sucursal = Sucursal.objects.create(direccion=direccion, **validated_data)
-        
-        return sucursal
-    
-    def update(self, instance, validated_data):
-        # Si 'direccion' está en los datos, actualiza la dirección anidada
-        if 'direccion' in validated_data:
-            direccion_data = validated_data.pop('direccion')
-            
-            # Actualiza los campos de la dirección existente
-            direccion_instance = instance.direccion
-            for attr, value in direccion_data.items():
-                setattr(direccion_instance, attr, value)
-            direccion_instance.save()
-            
-        # Actualiza los campos de la sucursal (ej. 'nombre', 'esta_activo')
-        return super().update(instance, validated_data)
+        empresa = data.get("empresa")
+        direccion = data.get("direccion")
+
+        if direccion and empresa and direccion.empresa != empresa:
+            raise serializers.ValidationError("La dirección pertenece a otra empresa.")
+        return data
 
 
 class StockSucursalSerializer(serializers.ModelSerializer):
-    producto = serializers.PrimaryKeyRelatedField(
-        queryset=Producto.objects.all()
-    )
-    sucursal = serializers.PrimaryKeyRelatedField(
-        queryset=Sucursal.objects.all()
-    )
+    producto_nombre = serializers.CharField(source="producto.nombre", read_only=True)
+    sucursal_nombre = serializers.CharField(source="sucursal.nombre", read_only=True)
+    empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
 
     class Meta:
         model = StockSucursal
-        fields = ['id', 'producto', 'sucursal', 'stock']
+        fields = [
+            "id",
+            "producto",
+            "producto_nombre",
+            "sucursal",
+            "sucursal_nombre",
+            "stock",
+            "empresa",
+            "empresa_nombre",
+        ]
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['producto'] = instance.producto.nombre
-        representation['sucursal'] = instance.sucursal.nombre
-        return representation
+    def validate(self, data):
+        """
+        Garantiza que producto, sucursal y empresa correspondan a la misma empresa.
+        """
+        empresa = data.get("empresa")
+        producto = data.get("producto")
+        sucursal = data.get("sucursal")
+
+        if producto and empresa and producto.empresa != empresa:
+            raise serializers.ValidationError("El producto pertenece a otra empresa.")
+        if sucursal and empresa and sucursal.empresa != empresa:
+            raise serializers.ValidationError("La sucursal pertenece a otra empresa.")
+
+        return data

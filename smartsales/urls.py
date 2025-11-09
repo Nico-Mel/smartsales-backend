@@ -45,6 +45,7 @@ urlpatterns = [
     # ])),
     path('api/', include('users.urls')),
     path('api/', include('products.urls')),
+    path('api/', include('sucursales.urls')),
     # path("api/", include(users_urls)),
     # path("api/", include(productos_urls)),
     # path("api/", include(ventas_urls)),
