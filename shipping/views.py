@@ -22,7 +22,8 @@ class MisDireccionesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Filtra solo las direcciones del usuario autenticado
+        if not self.request.user.is_authenticated:
+            return Direccion.objects.none()  # <-- Devuelve una lista vacía si es anónimo
         return Direccion.objects.filter(cliente=self.request.user)
 
     def perform_create(self, serializer):
