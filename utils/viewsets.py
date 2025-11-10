@@ -22,7 +22,7 @@ class SoftDeleteViewSet(viewsets.ModelViewSet):
             empresa = getattr(user, "empresa", None)
 
             # 🌍 Caso 1: SUPER ADMIN o superusuario → no filtrar
-            if user.is_superuser or getattr(user.role, "name", "") == "SUPER_ADMIN":
+            if user.is_authenticated and (user.is_superuser or getattr(user.role, "name", "") == "SUPER_ADMIN"):
                 pass  # ve todo el sistema
 
             # 🏢 Caso 2: ADMIN o usuario con empresa → solo su empresa

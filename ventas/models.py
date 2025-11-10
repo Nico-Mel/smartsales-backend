@@ -48,6 +48,25 @@ class Venta(models.Model):
     numero_nota = models.CharField(max_length=20, unique = True)
 
     usuario = models.ForeignKey('users.User',on_delete=models.CASCADE, related_name='ventas')
+    sucursal = models.ForeignKey(
+        'sucursales.Sucursal', 
+        on_delete=models.PROTECT,
+        null=True,  # Temporal para la migración
+        related_name='ventas'
+    )
+    CANALES_VENTA = (
+        ('POS', 'Punto de Venta'),
+        ('WEB', 'Tienda en Línea'),
+        ('OTRO', 'Otro'),
+    )
+    canal = models.CharField(
+        max_length=10, 
+        choices=CANALES_VENTA, 
+        default='POS', # Por defecto es POS, a menos que el frontend diga 'WEB'
+        null=True,
+        blank=True
+    )
+    
     pago = models.OneToOneField(Pago, on_delete=models.SET_NULL, null = True, blank=True, related_name='ventas')
     fecha= models.DateTimeField(auto_now=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)

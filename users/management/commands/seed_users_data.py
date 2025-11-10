@@ -41,6 +41,28 @@ class Command(BaseCommand):
             empresas_creadas.append(emp)
             self.stdout.write(self.style.SUCCESS(f"🏢 Empresa asegurada: {emp.nombre}"))
 
+        # ====== DEPARTAMENTOS PARA TODAS LAS EMPRESAS EXISTENTES ======
+        departamentos_data = ["Santa Cruz", "La Paz", "Cochabamba"]
+        empresas_existentes = Empresa.objects.all()
+
+        # Diccionario para guardar referencias de departamentos por empresa
+        departamentos_por_empresa = {}
+
+        for empresa in empresas_existentes:
+            self.stdout.write(f"📝 Poblando departamentos para: {empresa.nombre}")
+            departamentos_empresa = {}
+            for depto_nombre in departamentos_data:
+                dep, created = Departamento.objects.get_or_create(
+                    nombre=depto_nombre,
+                    empresa=empresa,
+                    defaults={}
+                )
+                departamentos_empresa[depto_nombre] = dep
+                status = self.style.SUCCESS("✅ CREADO") if created else self.style.NOTICE("⚠️ YA EXISTÍA")
+                self.stdout.write(f"  {status} Departamento: {depto_nombre}")
+            
+            departamentos_por_empresa[empresa.id] = departamentos_empresa
+
         # ====== ROLES ======
         roles_data = [
             {"name": "SUPER_ADMIN", "description": "Administrador global del sistema"},
@@ -109,8 +131,22 @@ class Command(BaseCommand):
             {"name": "Campania", "description": "Gestión de campañas"},
             {"name": "Descuento", "description": "Gestión de descuentos"},
             {"name": "Sucursal", "description": "Gestión de sucursales"},
-            {"name": "Stock", "description": "Gestión de stock"},
+            {"name": "StockSucursal", "description": "Gestión de stock"},
             {"name": "Bitacora", "description": "Registro de acciones"},
+            {"name": "Empresa", "description": "Gestión de empresas"},
+            {"name": "Plan", "description": "Gestión de planes"},
+            {"name": "Metodo_pago", "description": "Gestión de métodos de pago"},
+            {"name": "Pago", "description": "Gestión de pagos"},
+            {"name": "Venta", "description": "Gestión de ventas"},
+            {"name": "DetalleVenta", "description": "Gestión de detalles de venta"},
+            {"name": "Agencia", "description": "Gestión de agencias de envío"},
+            {"name": "Envio", "description": "Gestión de envíos"},
+            {"name": "Direccion", "description": "Gestión de direcciones"},
+            {"name": "Departamento", "description": "Gestión de departamentos"},
+            {"name": "Notificacion", "description": "Gestión de notificaciones"},
+            {"name": "Reporte", "description": "Gestión de reportes"},
+            {"name": "IAReport", "description": "Generación de reportes con IA"},
+
         ]
         modules = {}
         for m in modules_data:
@@ -132,22 +168,62 @@ class Command(BaseCommand):
                 )
 
         # ====== SUCURSALES POR EMPRESA ======
-        departamento, _ = Departamento.objects.get_or_create(nombre="La Paz")
         for emp in empresas_creadas:
-            direccion, _ = Direccion.objects.get_or_create(
+            depto_santa_cruz = departamentos_por_empresa[emp.id]["Santa Cruz"]
+            depto_la_paz = departamentos_por_empresa[emp.id]["La Paz"]
+            
+            # Sucursal Central (Santa Cruz)
+            direccion_central, _ = Direccion.objects.get_or_create(
                 empresa=emp,
                 pais="Bolivia",
-                ciudad="La Paz",
+                ciudad="Santa Cruz de la Sierra", 
                 zona="Centro",
                 calle=f"Av. {emp.nombre.split()[0]} Central",
                 numero="101",
-                departamento=departamento,
+                departamento=depto_santa_cruz,
             )
             Sucursal.objects.get_or_create(
                 empresa=emp,
                 nombre=f"Sucursal Central - {emp.nombre.split()[0]}",
-                direccion=direccion,
+                direccion=direccion_central,
                 defaults={"esta_activo": True},
             )
+            
+            # Sucursal La Paz (La Paz)
+            direccion_lp, _ = Direccion.objects.get_or_create(
+                empresa=emp,
+                pais="Bolivia",
+                ciudad="La Paz", 
+                zona="Zona Norte",
+                calle=f"Av. {emp.nombre.split()[0]} La Paz",
+                numero="202",
+                departamento=depto_la_paz,
+            )
+            Sucursal.objects.get_or_create(
+                empresa=emp,
+                nombre=f"Sucursal La Paz - {emp.nombre.split()[0]}",
+                direccion=direccion_lp,
+                defaults={"esta_activo": True},
+            )
+            
+            # Sucursal Norte (Santa Cruz - otra zona)
+            direccion_norte, _ = Direccion.objects.get_or_create(
+                empresa=emp,
+                pais="Bolivia",
+                ciudad="Santa Cruz de la Sierra", 
+                zona="Equipetrol",
+                calle=f"Av. {emp.nombre.split()[0]} Norte",
+                numero="303",
+                departamento=depto_santa_cruz,
+            )
+            Sucursal.objects.get_or_create(
+                empresa=emp,
+                nombre=f"Sucursal Norte - {emp.nombre.split()[0]}",
+                direccion=direccion_norte,
+                defaults={"esta_activo": True},
+            )
+            
+            self.stdout.write(self.style.SUCCESS(f"🏪 3 Sucursales creadas para {emp.nombre}"))
 
         self.stdout.write(self.style.SUCCESS("\n🎉 Configuración de múltiples empresas completada ✅"))
+        self.stdout.write(self.style.SUCCESS("📊 Tablas pobladas: Departamento, Plan, Empresa, Role, User, Module, Permission, Direccion, Sucursal"))

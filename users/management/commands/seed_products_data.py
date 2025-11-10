@@ -49,10 +49,10 @@ class Command(BaseCommand):
                 },
             )
 
-            # 4️⃣ Productos
+            # 4️⃣ Productos y Stock
             subcategorias = list(SubCategoria.objects.filter(empresa=empresa))
             marcas_obj = list(Marca.objects.filter(empresa=empresa))
-            sucursal = Sucursal.objects.filter(empresa=empresa).first()
+            sucursales = Sucursal.objects.filter(empresa=empresa)  # Todas las sucursales
 
             for i in range(10):
                 sub = random.choice(subcategorias)
@@ -76,12 +76,24 @@ class Command(BaseCommand):
                     empresa=empresa,
                     defaults={"url": f"https://placehold.co/400x300?text={p.nombre.replace(' ', '+')}"},
                 )
-                StockSucursal.objects.get_or_create(
-                    producto=p,
-                    sucursal=sucursal,
-                    defaults={"stock": random.randint(5, 25)},
-                )
-
+                
+                # ✅ Stock DIFERENTE para CADA sucursal
+                for sucursal in sucursales:
+                    stock_base = random.randint(5, 25)
+                    # Variar el stock por sucursal (Central tiene más stock, Norte/Sur menos)
+                    if "Norte" in sucursal.nombre:
+                        stock_final = max(1, stock_base - random.randint(3, 8))
+                    elif "Paz" in sucursal.nombre:
+                        stock_final = max(1, stock_base - random.randint(5, 12))
+                    else:  # Central
+                        stock_final = stock_base + random.randint(5, 15)
+                    
+                    StockSucursal.objects.get_or_create(
+                        producto=p,
+                        sucursal=sucursal,
+                        empresa=empresa,
+                        defaults={"stock": stock_final},
+                    )
             # 5️⃣ Descuentos
             productos = list(Producto.objects.filter(empresa=empresa))
             if productos:
@@ -91,7 +103,7 @@ class Command(BaseCommand):
                         tipo="PORCENTAJE",
                         porcentaje=random.randint(5, 15),
                         producto=p,
-                        sucursal=sucursal,
+                        sucursal=random.choice(sucursales), 
                         empresa=empresa,
                         defaults={"esta_activo": True},
                     )

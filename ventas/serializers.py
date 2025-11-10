@@ -111,6 +111,9 @@ class VentaSerializer(serializers.ModelSerializer):
             "numero_nota",
             "usuario",
             "usuario_email",
+            "sucursal", 
+            "sucursal_id",
+            "canal",
             "pago",
             "pago_detalle",
             "fecha",
@@ -126,11 +129,14 @@ class VentaSerializer(serializers.ModelSerializer):
         empresa = data.get("empresa")
         pago = data.get("pago")
         usuario = data.get("usuario")
+        sucursal = data.get("sucursal")
 
         if pago and empresa and pago.empresa != empresa:
             raise serializers.ValidationError("El pago pertenece a otra empresa.")
         if usuario and empresa and usuario.empresa != empresa:
             raise serializers.ValidationError("El usuario pertenece a otra empresa.")
+        if sucursal and empresa and sucursal.empresa != empresa: 
+            raise serializers.ValidationError("La sucursal pertenece a otra empresa.")
         return data
 
     def to_representation(self, instance):
