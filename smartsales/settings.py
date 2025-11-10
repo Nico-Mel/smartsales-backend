@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "drf_yasg",
+    'channels',
     # Local apps (usa la ruta relativa)
     "users",
     "sucursales",
@@ -83,7 +84,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "smartsales.wsgi.application"
-ASGI_APPLICATION = "smartsales.asgi.application"
+ASGI_APPLICATION = 'smartsales.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # DATABASE: prefer DATABASE_URL, fallback to individual env vars
 DATABASE_URL = config("DATABASE_URL", default=None)
@@ -161,3 +171,5 @@ SWAGGER_SETTINGS = {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     },
 }
+
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
