@@ -2,7 +2,7 @@
 from django.urls import path
 from . import views
 from rest_framework.routers import DefaultRouter
-from .views import PredictDemandView, RecommendProductView
+from .views import PredictDemandView, RecommendProductView, PredictSalesView
 
 urlpatterns = [
     # Vamos a crear una vista llamada 'PredictDemandView'
@@ -20,4 +20,8 @@ urlpatterns = [
     path('recommend/<int:producto_id>/', 
          views.RecommendProductView.as_view(), 
          name='predict_recommend'),
+
+    path('sales/category/<int:subcategoria_id>/', 
+         views.PredictSalesView.as_view(), 
+         name='predict_sales_category'),
 ]
