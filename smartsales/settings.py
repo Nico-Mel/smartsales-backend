@@ -15,9 +15,13 @@ from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 import os
+from decouple import config
+
+# Cargar la REST API Key y el App ID de OneSignal
+ONESIGNAL_REST_API_KEY = config('ONESIGNAL_REST_API_KEY')
+ONESIGNAL_APP_ID = config('ONESIGNAL_APP_ID')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 # ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
