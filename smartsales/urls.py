@@ -50,6 +50,9 @@ urlpatterns = [
     # path("api/", include(users_urls)),
     # path("api/", include(productos_urls)),
     path("api/", include('ventas.urls')),
+    path("api/", include('cart.urls')),
+    path("api/", include('notifications.urls')),
+    path("api/predict/", include('predictions.urls')),
     # swagger / redoc
     path(r'swagger(<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
