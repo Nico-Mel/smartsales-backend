@@ -38,11 +38,12 @@ class Role(models.Model):
     empresa = models.ForeignKey(
         "tenants.Empresa", on_delete=models.CASCADE, null=True, blank=True
     )
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=20)
     description = models.TextField(blank=True, null=True)
     esta_activo = models.BooleanField(default=True)
     class Meta:
         db_table = "role"
+        unique_together = ("empresa", "name")
 
     @property
     def display_name(self):
@@ -91,6 +92,7 @@ class UserStatus(models.TextChoices):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    onesignal_player_id = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(unique=True)
     nombre = models.CharField(max_length=150, blank=True)
     apellido = models.CharField(max_length=150, blank=True)

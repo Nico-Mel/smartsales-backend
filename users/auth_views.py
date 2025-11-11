@@ -8,29 +8,34 @@ from .auth_serializers import CustomTokenObtainPairSerializer
 from utils.logging_utils import log_action
 from utils.helpers import get_client_ip
 from rest_framework import status
-
+from users.models import User
 class LoginView(TokenObtainPairView):
     """Genera tokens de acceso (access y refresh)"""
     permission_classes = [AllowAny]
     serializer_class = CustomTokenObtainPairSerializer
+    
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
             email = request.data.get("email")
+            onesignal_token = request.data.get("onesignal_token")  # Obtener token OneSignal
             try:
-                from users.models import User
+                
                 user = User.objects.get(email=email)
-                if user:
-                    try:
-                        log_action(
-                            user=user,
-                            modulo="Autenticación",
-                            accion="LOGIN",
-                            descripcion=f"Inicio de sesión exitoso de {user.email}",
-                            request=request
-                        )
-                    except Exception as e:
-                        print("[ERROR LOG_ACTION]", e)
+                if user and onesignal_token:
+                    # Guardar el token de OneSignal en el modelo User
+                    user.onesignal_player_id = onesignal_token
+                    user.save()
+
+                
+                    log_action(
+                        user=user,
+                        modulo="Autenticación",
+                        accion="LOGIN",
+                        descripcion=f"Inicio de sesión exitoso de {user.email}",
+                        request=request
+                    )
+                  
             except User.DoesNotExist:
                 pass
         return response

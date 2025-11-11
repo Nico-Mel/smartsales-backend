@@ -20,6 +20,7 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from users.mobile_urls import urlpatterns as mobile_urls_auth 
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -44,10 +45,12 @@ urlpatterns = [
     #     # path('sales/', include('sales.urls')),
     # ])),
     path('api/', include('users.urls')),
+    path('api/users/', include(mobile_urls_auth)),
+
     path('api/', include('products.urls')),
     path('api/', include('sucursales.urls')),
     path('api/', include('shipping.urls')),
-    # path("api/", include(users_urls)),
+    path("api/", include('notifications.urls')),
     # path("api/", include(productos_urls)),
     path("api/", include('ventas.urls')),
     path("api/", include('cart.urls')),

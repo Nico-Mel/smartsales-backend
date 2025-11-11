@@ -5,7 +5,7 @@ from .serializers import EmpresaSerializer, PlanSerializer
 from utils.permissions import ModulePermission
 
 class PlanViewSet(viewsets.ModelViewSet):
-    queryset = Plan.objects.filter(activo=True)
+    queryset = Plan.objects.filter(esta_activo=True)
     serializer_class = PlanSerializer
     permission_classes = [ModulePermission]
     module_name = "Plan"

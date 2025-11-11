@@ -7,7 +7,7 @@ class PlanSerializer(serializers.ModelSerializer):
 
 class EmpresaSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(read_only=True)
-    plan_id = serializers.PrimaryKeyRelatedField(queryset=Plan.objects.filter(activo=True),source='plan',write_only=True)
+    plan_id = serializers.PrimaryKeyRelatedField(queryset=Plan.objects.filter(esta_activo=True),source='plan',write_only=True)
 
     class Meta:
         model = Empresa

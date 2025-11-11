@@ -1,7 +1,8 @@
 # users/serializers.py
 from rest_framework import serializers
 from .models import User, Role, Module, Permission
-
+from tenants.models import Empresa
+from tenants.serializers import EmpresaSerializer
 
 class RoleSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
@@ -35,10 +36,12 @@ class UserSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)
     role_id = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), source='role', write_only=True, required=False, allow_null=True)
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    empresa = EmpresaSerializer(read_only=True)  # Esto asegura que se puede serializar la empresa
+    empresa_id = serializers.PrimaryKeyRelatedField(queryset=Empresa.objects.all(), source='empresa', write_only=True)  # Esto mapea correctamente el campo de empresa
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'nombre', 'apellido', 'telefono', 'role', 'role_id', 'password']
+        fields = ['id', 'email', 'nombre', 'apellido', 'telefono', 'role', 'role_id', 'empresa', 'empresa_id', 'password']
 
     def create(self, validated_data):
         pwd = validated_data.pop('password', None)
