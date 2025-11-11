@@ -116,6 +116,74 @@ class Command(BaseCommand):
                 user.save()
             self.stdout.write(self.style.SUCCESS(f"👑 Admin listo: {adm['email']} / admin123"))
 
+        # ====== 👥 AGENTES DE VENTA Y 🙍 CLIENTES POR EMPRESA (NUEVO BLOQUE) ======
+        
+        self.stdout.write(self.style.MIGRATE_HEADING("--- 👥 Creando 5 Agentes y 10 Clientes por Empresa ---"))
+
+        # --- 1. CREACIÓN DE 5 AGENTES DE VENTA POR EMPRESA ---
+        self.stdout.write(self.style.MIGRATE_HEADING("... 👥 Creando Agentes de Venta ..."))
+        if "SALES_AGENT" not in roles:
+            self.stdout.write(self.style.ERROR("El rol 'SALES_AGENT' no se encontró. Saltando creación de agentes."))
+        else:
+            role_agente = roles["SALES_AGENT"]
+            for emp in empresas_creadas:
+                domain_part = emp.nombre.split()[0].lower().replace('.', '').replace(',', '') + ".com"
+                self.stdout.write(f"🏢 Creando 5 agentes para {emp.nombre} (@{domain_part})")
+                
+                for i in range(1, 6): # Loop del 1 al 5
+                    email = f"agent{i}@{domain_part}"
+                    user_agente, created = User.objects.get_or_create(
+                        email=email,
+                        defaults={
+                            "nombre": f"Agente {i}",
+                            "apellido": emp.nombre,
+                            "telefono": f"610000{i:02d}", # Teléfono ficticio
+                            "empresa": emp,
+                            "role": role_agente,
+                            "is_staff": False,
+                            "status": "ACTIVE",
+                        },
+                    )
+                    
+                    if created:
+                        user_agente.set_password("agent123") # Contraseña genérica
+                        user_agente.save()
+                        self.stdout.write(self.style.SUCCESS(f"  ✅ Creado agente: {email} / agent123"))
+                    else:
+                        self.stdout.write(self.style.NOTICE(f"  ⚠️ Agente ya existía: {email}"))
+
+        # --- 2. CREACIÓN DE 10 CLIENTES POR EMPRESA ---
+        self.stdout.write(self.style.MIGRATE_HEADING("... 🙍 Creando Clientes ..."))
+        if "CUSTOMER" not in roles:
+            self.stdout.write(self.style.ERROR("El rol 'CUSTOMER' no se encontró. Saltando creación de clientes."))
+        else:
+            role_cliente = roles["CUSTOMER"]
+            for emp in empresas_creadas:
+                domain_part = emp.nombre.split()[0].lower().replace('.', '').replace(',', '') + ".com"
+                self.stdout.write(f"🏢 Creando 10 clientes para {emp.nombre} (@{domain_part})")
+                
+                for i in range(1, 11): # Loop del 1 al 10
+                    email = f"customer{i}@{domain_part}"
+                    user_cliente, created = User.objects.get_or_create(
+                        email=email,
+                        defaults={
+                            "nombre": f"Cliente {i}",
+                            "apellido": f"Comprador {i}", # Apellido genérico para cliente
+                            "telefono": f"720000{i:02d}", # Otro rango de teléfono ficticio
+                            "empresa": emp,
+                            "role": role_cliente,
+                            "is_staff": False,
+                            "status": "ACTIVE",
+                        },
+                    )
+                    
+                    if created:
+                        user_cliente.set_password("customer123") # Contraseña diferente
+                        user_cliente.save()
+                        self.stdout.write(self.style.SUCCESS(f"  ✅ Creado cliente: {email} / customer123"))
+                    else:
+                        self.stdout.write(self.style.NOTICE(f"  ⚠️ Cliente ya existía: {email}"))  
+
         # ====== MÓDULOS ======
         modules_data = [
             {"name": "User", "description": "Gestión de usuarios"},

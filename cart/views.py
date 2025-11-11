@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from utils.viewsets import SoftDeleteViewSet
 from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
+from rest_framework.decorators import action
 
 class CartViewSet(SoftDeleteViewSet):
     queryset = Cart.objects.all().order_by("-created_at")
@@ -21,6 +22,43 @@ class CartViewSet(SoftDeleteViewSet):
         cart, created = Cart.get_or_create_active(user, empresa=empresa)
         serializer = self.get_serializer(cart)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], url_path='clear-active')
+    def clear_active_cart(self, request, *args, **kwargs):
+        """
+        Busca el carrito activo del usuario y elimina todos sus CartItems.
+        
+        El frontend debe llamar a este endpoint DESPUÉS de que 
+        /api/ventas/registrar/ responda con éxito (HTTP 201).
+        """
+        user = request.user
+        empresa = getattr(user, "empresa", None)
+
+        try:
+            # 1. Re-utilizamos tu propia lógica para encontrar el carrito activo
+            cart, created = Cart.get_or_create_active(user, empresa=empresa)
+
+            if created:
+                # Si se 'creó' uno, significa que no había uno activo para limpiar.
+                # No es un error, simplemente no hay nada que hacer.
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            # 2. ESTA ES LA LÍNEA CLAVE:
+            # Tu Serializer (CartSerializer) usa 'items' como related_name.
+            # Esta línea encuentra todos los CartItem asociados a ese
+            # carrito y los borra de la base de datos.
+            cart.items.all().delete()
+
+            return Response(
+                {"detail": "Carrito limpiado exitosamente."}, 
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al limpiar el carrito: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CartItemViewSet(SoftDeleteViewSet):

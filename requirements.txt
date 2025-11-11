@@ -20,3 +20,13 @@ tzdata==2025.2
 uritemplate==4.2.0
 wheel==0.45.1
 faker==18.9.1
+stripe==11.12.0
+pandas==2.3.3
+scikit-learn==1.7.2
+joblib==1.5.2
+numpy==2.3.4
+scipy==1.16.3
+python-dateutil==2.9.0.post0
+six==1.17.0
+threadpoolctl==3.6.0
+
