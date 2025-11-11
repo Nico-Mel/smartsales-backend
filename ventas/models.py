@@ -68,7 +68,7 @@ class Venta(models.Model):
     )
     
     pago = models.OneToOneField(Pago, on_delete=models.SET_NULL, null = True, blank=True, related_name='ventas')
-    fecha= models.DateTimeField(auto_now=True)
+    fecha= models.DateTimeField()
     total = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(max_length=50, choices =[
         ('pendiente', 'Pendiente'),
