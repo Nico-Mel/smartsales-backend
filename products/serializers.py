@@ -1,6 +1,8 @@
 # products/serializers.py
 from rest_framework import serializers
 from sucursales.models import Sucursal
+
+
 from .models import (
     Marca,
     Categoria,
@@ -95,7 +97,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     marca_nombre = serializers.CharField(source="marca.nombre", read_only=True)
     subcategoria_nombre = serializers.CharField(source="subcategoria.nombre", read_only=True)
     empresa_nombre = serializers.CharField(source="empresa.nombre", read_only=True)
-
+    descuento = serializers.SerializerMethodField()
     class Meta:
         model = Producto
         fields = [
@@ -114,7 +116,17 @@ class ProductoSerializer(serializers.ModelSerializer):
             "empresa_nombre",
             "detalle",
             "imagenes",
+            'descuento'
         ]
+    
+    def get_descuento(self, obj):
+        """
+        Método para obtener el descuento del producto si existe
+        """
+        descuento = Descuento.objects.filter(producto=obj, esta_activo=True).first()
+        if descuento:
+            return DescuentoSerializer(descuento).data
+        return None  
 
     def validate(self, data):
         """

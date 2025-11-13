@@ -58,3 +58,39 @@ class UserSerializer(serializers.ModelSerializer):
             user.set_password(pwd)
             user.save()
         return user
+
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+User = get_user_model() # (Asumo que tienes un User model custom)
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        # ¡Asegúrate de incluir todos los campos del formulario!
+        fields = ('email', 'nombre', 'apellido', 'telefono', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        # ¡Esta es la parte clave! Usamos create_user.
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password'],
+            nombre=validated_data.get('nombre', ''),
+            apellido=validated_data.get('apellido', ''),
+            telefono=validated_data.get('telefono', None),
+
+            role_id=4,
+            empresa_id=1
+        )
+        return user
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    
+    def validate_new_password(self, value):
+        # (Aquí puedes añadir validación de 8 caracteres, etc. si quieres)
+        return value

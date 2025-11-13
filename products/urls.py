@@ -10,6 +10,7 @@ from .views import (
     ImagenProductoViewSet,
     DescuentoViewSet,
     CampaniaViewSet,
+    BuscarProductoNLPView,
 )
 
 router = DefaultRouter()
@@ -23,6 +24,11 @@ router.register(r'descuentos', DescuentoViewSet)
 router.register(r'campanias', CampaniaViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),    
+    path('', include(router.urls)),   
+    path(
+        'busqueda-inteligente/', 
+        BuscarProductoNLPView.as_view(), 
+        name='buscar-producto-nlp'
+    ), 
 ]
 

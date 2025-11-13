@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas por Producto</title>
+    <style>
+        body { font-family: sans-serif; }
+        h1 { color: #333; }
+        .info { background-color: #f9f9f9; padding: 10px; border: 1px solid #eee; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+        }
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 8px; 
+            text-align: left;
+        }
+        th { background-color: #f4f4f4; }
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .total-row td { text-align: right; }
+        td.total-label { text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Ventas por Producto</h1>
+    
+    <div class="info">
+        <strong>Período del Reporte:</strong>
+        Desde: {{ fecha_inicio_str }} | 
+        Hasta: {{ fecha_fin_str }}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Producto (SKU)</th>
+                <th>Cantidad Vendida</th>
+                <th>Ingresos Totales</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in datos %}
+            <tr>
+                <td>{{ item.producto__nombre }} ({{ item.producto__sku }})</td>
+                <td>{{ item.cantidad_total }}</td>
+                <td>Bs. {{ item.ingresos_totales|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center;">
+                    No se encontraron ventas para este período.
+                </td>
+            </tr>
+            {% endfor %}
+            
+            {% if datos %}
+            <tr class="total-row">
+                <td class="total-label">TOTAL GENERAL</td>
+                <td>{{ total_general.total_cantidad }}</td>
+                <td>Bs. {{ total_general.total_ingresos|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</body>
+</html>

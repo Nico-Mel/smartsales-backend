@@ -29,7 +29,7 @@ class Pago(models.Model):
         ('fallido','Fallido'),
     ],
     default='pendiente')
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha = models.DateTimeField()
     referencia = models.CharField(max_length=250, blank=True, null = True)
     class Meta: 
         db_table = 'pago'

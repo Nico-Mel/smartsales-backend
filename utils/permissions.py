@@ -26,6 +26,17 @@ class ModulePermission(permissions.BasePermission):
             module_name = getattr(view, 'module_name', None)
             action = getattr(view, 'action', None)
             required_permission = self.action_map.get(action)
+            # Si no está en el action_map, inferir por método HTTP
+            if not required_permission:
+                if request.method == "GET":
+                    required_permission = "view"
+                elif request.method == "POST":
+                    required_permission = "create"
+                elif request.method in ["PUT", "PATCH"]:
+                    required_permission = "update"
+                elif request.method == "DELETE":
+                    required_permission = "delete"
+                    
             print(f"[DEBUG USER] Authenticated={user.is_authenticated}, Email={getattr(user, 'email', None)}")
             print(f"[DEBUG ROLE] Role={getattr(user.role, 'name', None)}")
             print(f"[DEBUG MODULE] module_name={module_name}, action={action}, required_permission={required_permission}")
