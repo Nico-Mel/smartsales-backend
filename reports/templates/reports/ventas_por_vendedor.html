@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-Rectf-8">
+    <title>Reporte de Ventas por Vendedor</title>
+    <style>
+        body { font-family: sans-serif; }
+        h1 { color: #333; }
+        .info { background-color: #f9f9f9; padding: 10px; border: 1px solid #eee; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+        }
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 8px; 
+            text-align: left;
+        }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Ventas por Vendedor</h1>
+    
+    <div class="info">
+        <strong>Período del Reporte:</strong>
+        Desde: {{ fecha_inicio_str }} | 
+        Hasta: {{ fecha_fin_str }}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Email Vendedor</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Cantidad de Ventas</th>
+                <th>Ingresos Totales (Bs.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in datos_reporte %}
+            <tr>
+                <td>{{ item.usuario__email }}</td>
+                <td>{{ item.usuario__nombre }}</td>
+                <td>{{ item.usuario__apellido }}</td>
+                <td>{{ item.numero_ventas }}</td>
+                <td>Bs. {{ item.ingresos_totales|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center;">
+                    No se encontraron ventas para este período.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
