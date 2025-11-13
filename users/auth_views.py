@@ -8,6 +8,8 @@ from .auth_serializers import CustomTokenObtainPairSerializer
 from utils.logging_utils import log_action
 from utils.helpers import get_client_ip
 from rest_framework import status
+from rest_framework.generics import RetrieveAPIView, CreateAPIView
+from .serializers import UserSerializer, UserCreateSerializer
 
 class LoginView(TokenObtainPairView):
     """Genera tokens de acceso (access y refresh)"""
@@ -41,21 +43,41 @@ class RefreshView(TokenRefreshView):
 class LogoutView(APIView):
     """Revoca el refresh token (blacklisting)"""
     permission_classes = [IsAuthenticated]
+    
     def post(self, request):
-        token_str = request.data.get("refresh")
-        if not token_str:
-            return Response({"detail": "refresh token requerido"}, status=400)
         try:
-            RefreshToken(token_str).blacklist()
-        except Exception:
-            return Response({"detail": "refresh inválido"}, status=400)
-        user = request.user
-        log_action(
-            user=user,
-            modulo="Autenticación",
-            accion="LOGOUT",
-            descripcion=f"Cierre de sesión de {user.email}",
-            request=request
-        )
+            # Obtener el refresh token del usuario actual, NO del request body
+            refresh_token = RefreshToken.for_user(request.user)
+            refresh_token.blacklist()
+            
+            user = request.user
+            log_action(
+                user=user,
+                modulo="Autenticación",
+                accion="LOGOUT", 
+                descripcion=f"Cierre de sesión de {user.email}",
+                request=request
+            )
+            
+            return Response({"detail": "Sesión cerrada correctamente."})
+            
+        except Exception as e:
+            return Response({"detail": "Error al cerrar sesión"}, status=400)
+        
+class UserProfileView(RetrieveAPIView):
+    """
+    Devuelve el perfil del usuario autenticado (el endpoint /me).
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
-        return Response({"detail": "Sesión cerrada correctamente."})
+    def get_object(self):
+        # Simplemente devuelve el usuario de la petición
+        return self.request.user
+    
+class RegisterView(CreateAPIView):
+    """
+    Crea un nuevo usuario.
+    """
+    permission_classes = [AllowAny] 
+    serializer_class = UserCreateSerializer

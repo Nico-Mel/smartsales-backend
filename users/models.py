@@ -104,6 +104,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name="usuarios",
         null=True,
         blank=True,
+        default=1,
     )
     # django required fields
     status = models.CharField(

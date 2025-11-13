@@ -6,11 +6,16 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Role, Module, Permission
-from .serializers import UserSerializer, RoleSerializer, ModuleSerializer, PermissionSerializer   
+from .serializers import UserSerializer, RoleSerializer, ModuleSerializer, PermissionSerializer, ChangePasswordSerializer  
 from utils.permissions import ModulePermission
 from utils.viewsets import SoftDeleteViewSet
+
+
 # from django.contrib.auth import authenticate
 class UserViewSet(SoftDeleteViewSet):
     """
@@ -88,3 +93,25 @@ class PermissionViewSet(SoftDeleteViewSet):
     serializer_class = PermissionSerializer
     permission_classes = [ModulePermission]
     module_name = "Permission"
+
+class ChangePasswordView(APIView):
+    """
+    Permite al usuario (logueado) cambiar su propia contraseña.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            old_pass = serializer.validated_data['old_password']
+            new_pass = serializer.validated_data['new_password']
+
+            if not user.check_password(old_pass):
+                return Response({"detail": "La contraseña actual es incorrecta."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user.set_password(new_pass)
+            user.save()
+            return Response({"detail": "Contraseña actualizada exitosamente."}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,8 +1,8 @@
 # users/urls.py
 from django.urls import path, include
-from .auth_views import LoginView, RefreshView, LogoutView
+from .auth_views import LoginView, RefreshView, LogoutView, UserProfileView, RegisterView
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, RoleViewSet, ModuleViewSet, PermissionViewSet
+from .views import UserViewSet, RoleViewSet, ModuleViewSet, PermissionViewSet, ChangePasswordView
 from .admin_views import (
     seed_database_view,
     seed_sample_data_view,
@@ -21,7 +21,9 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='jwt_login'),
     path('auth/refresh/', RefreshView.as_view(), name='jwt_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='jwt_logout'),
-
+    path('auth/register/', RegisterView.as_view(), name='user_register'),
+    path('auth/me/', UserProfileView.as_view(), name='user_profile'),
+    path('auth/change-password/', ChangePasswordView.as_view(), name='auth_change_password'), 
 
     path('admin/seeder/seed-users/', seed_database_view, name='admin_seed_users'),
     path('admin/seeder/seed-sample/', seed_sample_data_view, name='admin_seed_sample'),  
